@@ -1,0 +1,18 @@
+{
+  "name": "ts-baratie",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/quentg77/ts-baratie.git",
+  "author": "QuentinGuichaoua <39485623+quentg77@users.noreply.github.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "dependencies": {
+    "@types/node": "^13.9.5",
+    "ts-node": "^8.8.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  }
+}
