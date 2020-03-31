@@ -1,57 +1,28 @@
 import * as cluster from 'cluster';
 import * as readline from 'readline';
 import { Order, DishType, DishSize } from './types';
+import KitchenFactory from './kitchen/kitchenFactory';
 
 // define worker exec file and exit if not master
-if (cluster.isMaster) {
-	cluster.setupMaster({
-		exec: "worker.ts"
-	});
-} else {
+if (cluster.isWorker) {
 	console.log("Need Master, not Worker");
 	process.exit(-1);
 }
 
-class Reception {
-	static instance: Reception;
-
-	private kitchen: number;
-
-	constructor() {
-		if (!!Reception.instance) {
-			return Reception.instance;
-		}
-
-		this.kitchen = 1;
-
-		Reception.instance = this;
-
-		return this;
-	}
-
-	getKitchen() {
-		return this.kitchen;
-	}
-
-	addKitchen() {
-		this.kitchen++;
-	}
-}
-
 // main code
-const cookingTime: number = Number(process.argv[2]);
+const cookingTimeMul: number = Number(process.argv[2]);
 const nbCooker: number = Number(process.argv[3]);
 const restockDelay: number = Number(process.argv[4]);
 
-if (isNaN(cookingTime) || isNaN(nbCooker) || isNaN(restockDelay)) {
+if (isNaN(cookingTimeMul) || isNaN(nbCooker) || isNaN(restockDelay)) {
 	console.log("Bad arguments, need only int value");
 	console.log("Ex: yarn start 2 5 2000");
 	process.exit(-1);
 }
 
-console.log(cookingTime, nbCooker, restockDelay);
+const kitchenFactory = new KitchenFactory(cookingTimeMul, nbCooker, restockDelay)
 
-const input = askInput("your order : ").then((input): Order[] | boolean | void => {
+const inputOrders = askInput("your order : ").then((input): Order[] | boolean => {
 	const orderInputList = input.split(/; /);
 	
 	let invalidOrder = false;
@@ -62,6 +33,7 @@ const input = askInput("your order : ").then((input): Order[] | boolean | void =
 
 		if (!parsedOrder) {
 			invalidOrder = true;
+			return null;
 		}
 
 		const [,type,size,number] = parsedOrder;
@@ -75,9 +47,10 @@ const input = askInput("your order : ").then((input): Order[] | boolean | void =
 		return order;
 	});
 
-	console.log(orders);
+	if (invalidOrder) return false;
+	kitchenFactory.addOrders(orders);
+	return orders;
 });
-
 
 function askInput(question: string): Promise<string> {
 	const rl = readline.createInterface({
@@ -88,6 +61,7 @@ function askInput(question: string): Promise<string> {
 	return new Promise<string>(resolve =>
 		rl.question(question, res => {
 			rl.close();
+			res = res ? res : "toto";
 			resolve(res);
 		})
 	);
